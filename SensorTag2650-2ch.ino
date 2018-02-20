@@ -78,6 +78,7 @@ bool connectToServer(BLEAddress pAddress) {
     //Resolution 10 ms. Range 100 ms (0x0A) to 2.55 sec (0xFF). Default 1 second (0x64).
     uint8_t accelerometerPeriod = 10;
     pPeriodCharacteristic = pRemoteService->getCharacteristic(periodUUID);
+    pPeriodCharacteristic->writeValue( accelerometerPeriod, 1);
     Serial.print(" - Accelerometer priod: ");
     uint8_t valueInt8 = pPeriodCharacteristic->readUInt8();
     Serial.print(valueInt8);
