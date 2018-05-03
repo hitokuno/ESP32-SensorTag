@@ -4,19 +4,21 @@
 // The remote device we wish to connect to.
 static BLEUUID        deviceUUID("0000aa80-0000-1000-8000-00805f9b34fb");
 // The remote service we wish to connect to.
-static BLEUUID  notificationUUID("00002902-0000-1000-8000-00805f9b34fb");
-static BLEUUID       serviceUUID("f000aa80-0451-4000-b000-000000000000");
-static BLEUUID          dataUUID("f000aa81-0451-4000-b000-000000000000");
-static BLEUUID configurationUUID("f000aa82-0451-4000-b000-000000000000");
-static BLEUUID        periodUUID("f000aa83-0451-4000-b000-000000000000");
+//static BLEUUID   notificationUUID("00002902-0000-1000-8000-00805f9b34fb");
+static BLEUUID        serviceUUID("f000aa80-0451-4000-b000-000000000000");
+static BLEUUID           dataUUID("f000aa81-0451-4000-b000-000000000000");
+static BLEUUID  configurationUUID("f000aa82-0451-4000-b000-000000000000");
+static BLEUUID         periodUUID("f000aa83-0451-4000-b000-000000000000");
+static BLEUUID batteryServiceUUID("0000180f-0000-1000-8000-00805f9b34fb");
+static BLEUUID    batteryDataUUID("00002a19-0000-1000-8000-00805f9b34fb");
 
 static BLEAddress *pServerAddress;
 static boolean doConnect = false;
 static boolean connected = false;
-static BLERemoteCharacteristic* pNotificationCharacteristic;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
 static BLERemoteCharacteristic* pConfigurationCharacteristic;
 static BLERemoteCharacteristic* pPeriodCharacteristic;
+static BLERemoteCharacteristic* pBatteryCharacteristic;
 int rssi = -10000;
 
 static void notifyCallback(
@@ -49,6 +51,7 @@ bool connectToServer(BLEAddress pAddress) {
       return false;
     }
     Serial.println(" - Found our service");
+    Serial.println(pRemoteService->toString().c_str());
 
     // Obtain a reference to the characteristic in the service of the remote BLE server.
     pRemoteCharacteristic = pRemoteService->getCharacteristic(dataUUID);
@@ -89,13 +92,22 @@ bool connectToServer(BLEAddress pAddress) {
     Serial.print(valueInt8);
     Serial.println("*10ms");
 
-    uint8_t notification = 0x0001;
-    pNotificationCharacteristic = pRemoteService->getCharacteristic(notificationUUID);
-    if (pNotificationCharacteristic == nullptr) {
-      Serial.print("Failed to find our notification: ");
-      Serial.println(notificationUUID.toString().c_str());
-      //return false;
+    BLERemoteService* pBatteryService = pClient->getService(batteryServiceUUID);
+    if (pBatteryService == nullptr) {
+      Serial.print("Failed to find battery service UUID: ");
+      Serial.println(batteryServiceUUID.toString().c_str());
+      return false;
     }
+    Serial.println(" - Found battery service");
+
+    // Obtain a reference to the characteristic in the service of the remote BLE server.
+    pBatteryCharacteristic = pBatteryService->getCharacteristic(batteryDataUUID);
+    if (pBatteryCharacteristic == nullptr) {
+      Serial.print("Failed to find battery level UUID: ");
+      Serial.println(batteryDataUUID.toString().c_str());
+      return false;
+    }
+    Serial.println(" - Found battery level");
 
     pRemoteCharacteristic->registerForNotify(notifyCallback);
 }
@@ -175,12 +187,19 @@ void loop() {
     String strings = value.c_str();
     //printGyroscope(strings);
     printAccelerometer(strings);
+    std::string battery = pBatteryCharacteristic->readValue();
+    printBatteryLevel(battery.c_str());
     Serial.println("");
     accelerometerToAnalogWrite(strings);
   }
 
   delay(100); // Delay a second between loops.
 } // End of loop
+
+void printBatteryLevel(String strings) {
+    Serial.print(" Battery: ");
+    Serial.print(strings.charAt( 0), DEC);
+}
 
 void printGyroscope(String strings) {
   Serial.print("  Gyroscope X: ");
