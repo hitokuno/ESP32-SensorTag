@@ -67,7 +67,7 @@ bool connectToServer(BLEAddress pAddress) {
       return false;
     }
     // Gyroscope must be enabled to get Accelerometer due to unknown reason..
-    uint8_t accelerometerEnabled[2] = {B00111111, B00000000}; //2^3+2^4+2^5;
+    uint8_t accelerometerEnabled[2] = {B00111111, B00000000};
     pConfigurationCharacteristic->writeValue( accelerometerEnabled, 2);
     // Read the value of the characteristic.
     uint16_t valueInt16 = pConfigurationCharacteristic->readUInt16();
@@ -78,6 +78,11 @@ bool connectToServer(BLEAddress pAddress) {
     //Resolution 10 ms. Range 100 ms (0x0A) to 2.55 sec (0xFF). Default 1 second (0x64).
     uint8_t accelerometerPeriod = 10;
     pPeriodCharacteristic = pRemoteService->getCharacteristic(periodUUID);
+    if (pPeriodCharacteristic == nullptr) {
+      Serial.print("Failed to find our period: ");
+      Serial.println(periodUUID.toString().c_str());
+      return false;
+    }
     pPeriodCharacteristic->writeValue( accelerometerPeriod, 1);
     Serial.print(" - Accelerometer priod: ");
     uint8_t valueInt8 = pPeriodCharacteristic->readUInt8();
@@ -202,6 +207,6 @@ void printAccelerometer(String strings) {
 }
 
 void accelerometerToAnalogWrite(String strings) {
-  dacWrite(25, strings.charAt( 7));
-  dacWrite(26, strings.charAt( 9));
+  dacWrite(25, strings.charAt( 7) + 126);
+  dacWrite(26, strings.charAt( 9) + 126);
 }
