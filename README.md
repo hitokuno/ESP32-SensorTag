@@ -14,3 +14,5 @@ Connect SensorTag CC2650 from ESP32 and write accelerometer to Analog-Digital Co
 2. Connect to the device that sends most strong BLE signal.
 3. Write Accelerometer X(DACB), Accelerometer Y(DACC), Accelerometer Z(DACD) and battery level(DACA) via TLV5620.
 4. Re-scan/connect if the connection is lost.
+
+[Espr Developer 32](https://github.com/hitokuno/ESP32-SensorTag/blob/images/EsprDeveloper32.jpg)
